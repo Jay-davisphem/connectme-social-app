@@ -1,5 +1,15 @@
-const express = require('express')
+const express = require("express");
+const morgan = require("morgan");
 
-const app =  express()
+const feedRoutes = require("./routes/feed");
+const setHeaders = require('./middlewares/setHeaders')
+const app = express();
 
-app.listen(3000, () => console.log('Connected'))
+app.use(morgan("dev"));
+
+app.use(express.json()); // parse incoming json data
+app.use(setHeaders)
+
+app.use("/feed", feedRoutes);
+
+app.listen(3000, () => console.log("Connected"));
