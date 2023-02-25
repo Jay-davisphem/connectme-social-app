@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+
+# $1 -> relative url i.e /feed/posts
+arg1_url=$1
+arg2_auth=$2
+
+curl "http://localhost:3000$arg1_url" -H "Content-Type: application/json; Authorization: $arg2_auth" | jq
+echo
