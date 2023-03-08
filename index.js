@@ -3,12 +3,13 @@ const express = require("express");
 const morgan = require("morgan");
 const mongoose = require("mongoose");
 const multer = require("multer");
+const crypto = require("node:crypto");
 const feedRoutes = require("./routes/feed");
 const errorController = require("./controllers/error");
 const setHeaders = require("./middlewares/setHeaders");
 const app = express();
 const PORT = 3000;
-const fileStorage = multer.distStorage({
+const fileStorage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, "images");
   },
@@ -26,7 +27,7 @@ app.use(morgan("dev"));
 require("dotenv").config();
 
 app.use(express.json()); // parse incoming json data
-app.use(multer({ storage: fileStorage, fileFilter }).single('image'));
+app.use(multer({ storage: fileStorage, fileFilter }).single("image"));
 app.use("/images", express.static(path.join(__dirname, "images")));
 app.use(setHeaders);
 
@@ -37,8 +38,8 @@ app.use(errorController);
 mongoose
   .connect(process.env.MONGO_URI)
   .then((result) => {
-    app.listen(PORT, () =>
-      console.log("Connected TO http://localhost:" + PORT)
-    );
+    app.listen(PORT, () => {
+      console.log("Connected TO http://localhost:" + PORT);
+    });
   })
   .catch(console.error);

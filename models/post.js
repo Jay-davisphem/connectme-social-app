@@ -5,7 +5,8 @@ const Schema = mongoose.Schema
 const postSchema = new Schema({ 
   title:{
     type: String,
-    required: true
+    required: true,
+    minLength: 5
   }, 
   imageUrl:{
     type: String,
@@ -13,7 +14,8 @@ const postSchema = new Schema({
   }, 
   content:{
     type: String,
-    required: true
+    required: true,
+    minLength: 5
   }, 
   creator: {
     type: Object,
