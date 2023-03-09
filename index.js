@@ -5,6 +5,8 @@ const mongoose = require("mongoose");
 const multer = require("multer");
 const crypto = require("node:crypto");
 const feedRoutes = require("./routes/feed");
+const authRoutes = require("./routes/auth");
+const adminRoutes = require("./routes/admin");
 const errorController = require("./controllers/error");
 const setHeaders = require("./middlewares/setHeaders");
 const app = express();
@@ -31,8 +33,9 @@ app.use(multer({ storage: fileStorage, fileFilter }).single("image"));
 app.use("/images", express.static(path.join(__dirname, "images")));
 app.use(setHeaders);
 
+app.use("/auth", authRoutes);
 app.use("/feed", feedRoutes);
-
+app.use("/admin", adminRoutes);
 app.use(errorController);
 
 mongoose

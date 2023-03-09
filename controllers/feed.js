@@ -1,4 +1,5 @@
 const Post = require("../models/post");
+const User = require("../models/user");
 const { validationResult } = require("express-validator");
 const { raiseError, catchError, clearImage } = require("../service/utils");
 
@@ -10,7 +11,7 @@ exports.getPosts = async (req, res, next) => {
     if (curPage < 1) curPage = 1;
     const count = await Post.count();
     const totalPage = Math.ceil(count / perPage);
-    if (curPage > totalPage) curPage = totalPage;
+    if (totalPage && curPage > totalPage) curPage = totalPage;
     const posts = await Post.aggregate([
       { $skip: perPage * (curPage - 1) },
       { $limit: perPage },
@@ -19,8 +20,8 @@ exports.getPosts = async (req, res, next) => {
     res.json({
       message: "Posts fetched successsfully.",
       posts,
-      next: curPage == totalPage ? null : `${url}${+curPage + 1}`,
-      previous: curPage == 1 ? null : `${url}${+curPage - 1}`,
+      next: curPage >= totalPage ? null : `${url}${+curPage + 1}`,
+      previous: curPage <= 1 ? null : `${url}${+curPage - 1}`,
     });
   } catch (err) {
     catchError(err, next);
@@ -48,13 +49,17 @@ exports.createPost = async (req, res, next) => {
       title,
       content,
       imageUrl,
-      creator: { name: "davisphem" },
+      creator: req.userId,
     });
     // create post in db
     await post.save();
+    const user = await User.findById(req.userId);
+    user.posts.push(post);
+    await user.save();
     res.status(201).json({
       message: "Post successfully created",
       post,
+      creator: user,
     });
   } catch (err) {
     catchError(err, next);
@@ -70,7 +75,7 @@ exports.updatePost = async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) raiseError("Validation Error", 422, errors.array());
     //if (!imageUrl) raiseError("Image not found");
-    const post = await Post.findById(postId);
+    const post = await Post.findOne({ _id: postId, creator: req.userId });
     if (!post) raiseError("Post not found", 404);
     if (imageUrl !== post.imageUrl) clearImage(post.imageUrl);
     await post.updateOne({ title, imageUrl, content });
@@ -83,10 +88,15 @@ exports.updatePost = async (req, res, next) => {
 exports.deletePost = async (req, res, next) => {
   try {
     const postId = req.params.postId;
-    const post = await Post.findById(postId);
+    const post = await Post.findOne({ _id: postId, creator: req.userId });
     if (!post) raiseError("Could not find post.", 404);
     clearImage(post.imageUrl);
     await post.delete();
+    const user = await User.findById(req.userId);
+    user.posts.pull(postId);
+    //const changedUserPosts = user.posts.filter((post) => post._id != postId);
+    //user.posts = changedUserPosts;
+    await user.save();
     res.json({ message: "Post successfully deleted!" });
   } catch (err) {
     catchError(err, next);

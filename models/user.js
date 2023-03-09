@@ -6,24 +6,28 @@ const userSchema = new Schema(
     email: {
       type: String,
       required: true,
+      unique: true,
     },
     password: {
       type: String,
       required: true,
       minLength: 8,
-      maxLength: 16
     },
     name: {
       type: String,
       required: true,
-      minLength: 3 
+      minLength: 3,
     },
-    status: {
+    isActive: {
+      type: Boolean,
+      default: false,
+    },
+    role: {
       type: String,
-      required: true,
-      enum: ['Active', 'Inactive']
+      enum: ["admin", "user"],
+      default: "user",
     },
-    posts: [{ type: Schema.Types.ObjectId, ref: "Post" }],
+    posts: [{ type: Schema.Types.ObjectId, ref: "Post", default: [] }],
   },
   { timestamps: true }
 );
