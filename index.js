@@ -41,8 +41,12 @@ app.use(errorController);
 mongoose
   .connect(process.env.MONGO_URI)
   .then((result) => {
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log("Connected TO http://localhost:" + PORT);
+    });
+    const io = require("./socket").init(server);
+    io.on("connection", (socket) => {
+      console.log("Client connected!");
     });
   })
   .catch(console.error);
