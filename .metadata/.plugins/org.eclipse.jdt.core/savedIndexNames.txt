@@ -1,3 +1,0 @@
-INDEX VERSION 1.131+/home/davisphem/codes/node_codes/blog-api/.metadata/.plugins/org.eclipse.jdt.core
-519306738.index
-3842426239.index
