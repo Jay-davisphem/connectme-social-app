@@ -18,15 +18,19 @@ exports.signup = async (req, res, next) => {
 };
 
 exports.login = async (req, res, next) => {
-  const { email, password } = req.body;
-  const user = await User.findOne({ email });
-  if (!user) raiseError("User does not exist!", 401);
-  const isValid = await bcrypt.compare(password, user.password);
-  if (!isValid) raiseError("Wrong password", 401);
-  const token = jwt.sign({ email, userId: user._id }, process.env.SECRET, {
-    expiresIn: "1h",
-  });
-  res.json({ token, userId: user._id });
+  try {
+    const { email, password } = req.body;
+    const user = await User.findOne({ email });
+    if (!user) raiseError("User does not exist!", 401);
+    const isValid = await bcrypt.compare(password, user.password);
+    if (!isValid) raiseError("Wrong password", 401);
+    const token = jwt.sign({ email, userId: user._id }, process.env.SECRET, {
+      expiresIn: "1h",
+    });
+    res.json({ token, userId: user._id });
+  } catch (err) {
+    catchError(err, next);
+  }
 };
 
 exports.logout = (req, res, next) => {};

@@ -2,7 +2,7 @@ const Post = require("../models/post");
 const User = require("../models/user");
 const { validationResult } = require("express-validator");
 const { raiseError, catchError, clearImage } = require("../service/utils");
-const io = require("../socket").getIO();
+const io = require("../socket");
 
 exports.getPosts = async (req, res, next) => {
   const PER_PAGE = 2;
@@ -13,12 +13,11 @@ exports.getPosts = async (req, res, next) => {
     const count = await Post.count();
     const totalPage = Math.ceil(count / perPage);
     if (totalPage && curPage > totalPage) curPage = totalPage;
-    const posts = await Post.aggregate([
-      { $skip: perPage * (curPage - 1) },
-      { $limit: perPage },
-      { $populate: "creator" },
-      { $sort: "$createdAt" },
-    ]);
+    const posts = await Post.find({ $sort: { createdAt: -1, creator: 1 } })
+      .all()
+      .populate("creator")
+      .skip(perPage * (curPage - 1))
+      .limit(perPage);
     const url = req.get("host") + "/feed/posts/?page=";
     res.json({
       message: "Posts fetched successsfully.",
@@ -59,7 +58,7 @@ exports.createPost = async (req, res, next) => {
     const user = await User.findById(req.userId);
     user.posts.push(post);
     await user.save();
-    io.emit("post", {
+    io.getIO().emit("post", {
       action: "create",
       post: { ...post._doc, creator: { _id: user._id, name: user.name } },
     });
@@ -89,7 +88,7 @@ exports.updatePost = async (req, res, next) => {
     if (!post) raiseError("Post not found", 404);
     if (imageUrl !== post.imageUrl) clearImage(post.imageUrl);
     await post.updateOne({ title, imageUrl, content });
-    io.emit("post", { action: "update", post });
+    io.getIO().emit("post", { action: "update", post });
     return res.status(200).json({ message: "Post updated", post });
   } catch (err) {
     catchError(err, next);
@@ -111,7 +110,7 @@ exports.deletePost = async (req, res, next) => {
     //const changedUserPosts = user.posts.filter((post) => post._id != postId);
     //user.posts = changedUserPosts;
     await user.save();
-    io.emit("post", { action: "delete", post: postId });
+    io.getIO().emit("post", { action: "delete", post: postId });
     res.json({ message: "Post successfully deleted!" });
   } catch (err) {
     catchError(err, next);

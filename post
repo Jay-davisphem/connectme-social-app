@@ -6,4 +6,4 @@ arg2_auth=$5
 title=$2
 content=$3
 # use formdata instead of application/json cos of file upload
-curl "http://localhost:3000$arg1_url" -F title=$title -F content=$content -F image=@transactions.png -H  "Authorization: $arg2_auth" | jq
+curl "http://localhost:3000$arg1_url" -F title=$title -F content=$content -F image=@transactions.png -H  "Authorization: Bearer $arg2_auth" | jq

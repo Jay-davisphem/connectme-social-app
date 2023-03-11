@@ -1,0 +1,6 @@
+#!/usr/bin/env bash
+
+# $1 -> relative url i.e /feed/posts, $2 -> stringified json data
+arg1_url=$1
+# use formdata instead of application/json cos of file upload
+curl -X PUT "http://localhost:3000$arg1_url" -d @data.json -H  "Authorization: Bearer $arg2_auth" | jq
